@@ -166,7 +166,7 @@ def next_patient_id(src_coll, *, stop_after:int):
         yield eid
 
 
-def get_ehr_ids(col, *, limit:int, batch:int=2_000, log_every:int=5_000):
+def get_ehr_ids(col, *, limit:int, batch:int=10_000, log_every:int=5_000):
     """
     Stream `limit` distinct EHR‑IDs from `col` without large RAM usage.
     Yields the IDs as soon as they are discovered.
@@ -174,8 +174,7 @@ def get_ehr_ids(col, *, limit:int, batch:int=2_000, log_every:int=5_000):
     qry = {"$or":[{"used":False},{"used":{"$exists":False}}]}
     seen  : set[str] = set()
     added = scanned = 0
-    cursor = (col.find(qry, {"ehr_id":1})
-                 .hint("ehr_id_1")         # ← make sure this index exists
+    cursor = (col.find(qry, {"ehr_id":1})        # ← make sure this index exists
                  .batch_size(batch))
 
     for doc in cursor:
